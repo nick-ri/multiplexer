@@ -2,6 +2,7 @@ package collector
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -38,13 +39,13 @@ func (c *collector) worker(id int, paramsCh <-chan chan param) {
 
 				resp, err := c.client.Do(req)
 				if err != nil {
-					prm.errCh <- err
+					prm.errCh <- fmt.Errorf("%s :%w", prm.url, err)
 					break
 				}
 
 				bts, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
-					prm.errCh <- err
+					prm.errCh <- fmt.Errorf("%s :%w", prm.url, err)
 					break
 				}
 
