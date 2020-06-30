@@ -2,6 +2,7 @@ package transport
 
 import (
 	"net/http"
+	"time"
 )
 
 type MiddlewareFunc func(http.Handler) http.Handler
@@ -18,6 +19,10 @@ func NewServer(address string) Server {
 	return &server{
 		Server: &http.Server{
 			Addr: address,
+
+			ReadTimeout:  time.Second,
+			WriteTimeout: time.Second * 9,
+
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				byMethod, ok := handlers[r.Method]
 				if !ok {
