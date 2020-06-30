@@ -22,7 +22,7 @@ func (w *window) incr(n int64) int64 {
 	return atomic.AddInt64(&w.n, n)
 }
 
-func (w *window) reset(start, num int64) {
+func (w *window) set(start, num int64) {
 	atomic.StoreInt64(&w.s, start)
 	atomic.StoreInt64(&w.n, num)
 }
@@ -63,8 +63,8 @@ func (l *limiter) renew(now time.Time) {
 		}
 
 		// reset windows, set old one as 1x rate ago and new one right now with new counts
-		l.prev.reset(currNS-l.rate, old)
-		l.curr.reset(currNS, 0)
+		l.prev.set(currNS-l.rate, old)
+		l.curr.set(currNS, 0)
 	}
 }
 
