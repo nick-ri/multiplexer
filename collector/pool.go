@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"sync/atomic"
 	"time"
 )
 
@@ -21,24 +22,27 @@ type param struct {
 
 type collector struct {
 	workersCh chan chan param
-	poolSize  int
+	fixed     int
+	overflow  int
+	spawned   int32
 	client    *http.Client
 }
 
-func NewCollector(poolSize int, timeout time.Duration) Collector {
+func NewCollector(fixed, overflow int, timeout time.Duration) Collector {
 	return &collector{
-		poolSize:  poolSize,
-		workersCh: make(chan chan param, 1),
+		fixed:     fixed,
+		overflow:  overflow,
+		workersCh: make(chan chan param, fixed),
 		client: &http.Client{
 			Transport: http.DefaultTransport,
-			Timeout:   timeout,
+			Timeout:   timeout * 3,
 		},
 	}
 }
 
 func (c *collector) Start(ctx context.Context) {
-	for i := 1; i <= c.poolSize; i++ {
-		go c.worker(i, c.workersCh)
+	for i := 1; i <= c.fixed; i++ {
+		go c.fixedWorker(i, c.workersCh)
 	}
 
 	go func() {
@@ -50,12 +54,23 @@ func (c *collector) Start(ctx context.Context) {
 }
 
 func (c *collector) acquireWorkers(count, buffSize int) (chan param, error) {
-	if count > c.poolSize {
+	if count > c.fixed+c.overflow {
 		return nil, errors.New("acquired workers more that pool size")
 	}
+
+	spawned := int(atomic.LoadInt32(&c.spawned))
+
+	if spawned >= c.overflow {
+		return nil, errors.New("pool is overflowed, can't spawn more workers")
+	}
+
 	var ch = make(chan param, buffSize)
 	for i := 0; i < count; i++ {
-		c.workersCh <- ch
+		select {
+		case c.workersCh <- ch:
+		default:
+			go c.reader(int(atomic.AddInt32(&c.spawned, 1)), ch, false)
+		}
 	}
 	return ch, nil
 }

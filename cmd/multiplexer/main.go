@@ -35,7 +35,7 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	coll := collector.NewCollector(4*int(*limitN), *collectTmt)
+	coll := collector.NewCollector(fixedWorkersCount, overflowWorkersCount, maxCollectionTmt)
 	coll.Start(ctx)
 
 	srv := transport.NewServer(*address)
