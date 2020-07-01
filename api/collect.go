@@ -8,7 +8,7 @@ import (
 	"github.com/NickRI/multiplexer/collector"
 )
 
-func Collect(collector collector.Collector) func(http.ResponseWriter, *http.Request) {
+func Collect(collector collector.Collector, urls, clim int) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var request []string
 
@@ -21,12 +21,12 @@ func Collect(collector collector.Collector) func(http.ResponseWriter, *http.Requ
 			return
 		}
 
-		if len(request) > 20 {
+		if len(request) > urls {
 			BadRequestError(w, errors.New("url list size is too big"))
 			return
 		}
 
-		data, err := collector.Collect(ctx, request, 4)
+		data, err := collector.Collect(ctx, request, clim)
 		if err != nil {
 			InternalServerError(w, err)
 			return

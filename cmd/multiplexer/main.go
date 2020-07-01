@@ -19,10 +19,17 @@ import (
 	"github.com/NickRI/multiplexer/transport"
 )
 
+const (
+	incomingLimit        = 100         // number of incoming requests that can be processed in second
+	outgoingLimit        = 4           // number of outbound requests per second per collection
+	maxCountOfUrls       = 20          // maximum number of incoming urls
+	maxCollectionTmt     = time.Second // timeout per each resource collection
+	fixedWorkersCount    = incomingLimit * outgoingLimit
+	overflowWorkersCount = fixedWorkersCount*(maxCountOfUrls/outgoingLimit) - fixedWorkersCount
+)
+
 func main() {
-	limitN := flag.Int64("limit", 100, "number of parallel actions can be processed")
 	address := flag.String("address", ":8080", "listen server address")
-	collectTmt := flag.Duration("timeout", time.Second, "timeout per each resource collection")
 
 	flag.Parse()
 
@@ -34,8 +41,8 @@ func main() {
 	srv := transport.NewServer(*address)
 
 	srv.Post("/collect",
-		http.HandlerFunc(api.Collect(coll)),
-		api.RateLimitMiddleware(limit.NewLimiter(time.Second, *limitN)),
+		http.HandlerFunc(api.Collect(coll, maxCountOfUrls, outgoingLimit)),
+		api.RateLimitMiddleware(limit.NewLimiter(time.Second, incomingLimit)),
 		api.LoggerMiddleware,
 	)
 
