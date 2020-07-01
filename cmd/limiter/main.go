@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	limitN := flag.Int64("limit", 100, "number of parallel actions can be processed")
+	limitN := flag.Int("limit", 100, "number of parallel actions can be processed")
 	address := flag.String("address", ":8080", "listen server address")
 
 	flag.Parse()
