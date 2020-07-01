@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+var now = time.Now
+
 type window struct {
 	s int64
 	n int64
@@ -34,10 +36,10 @@ type limiter struct {
 	prev  *window
 }
 
-func NewLimiter(rate time.Duration, limit int64) Limiter {
+func NewLimiter(rate time.Duration, limit int) Limiter {
 	return &limiter{
 		rate:  rate.Nanoseconds(), // window size
-		limit: limit,              // limit per slide windows
+		limit: int64(limit),       // limit per slide windows
 		curr:  &window{},          // current window data
 		prev:  &window{},          // previous window data
 	}
@@ -68,8 +70,8 @@ func (l *limiter) renew(now time.Time) {
 	}
 }
 
-func (l *limiter) Allow() bool {
-	now := time.Now()
+func (l *limiter) count() int64 {
+	now := now()
 
 	// try to renew windows by dynamically move it forward and swap values
 	l.renew(now)
@@ -81,9 +83,11 @@ func (l *limiter) Allow() bool {
 
 	weight := float64(l.rate-offset) / float64(l.rate)
 
-	count := int64(weight*float64(l.prev.num())) + l.curr.num()
+	return int64(weight*float64(l.prev.num())) + l.curr.num()
+}
 
-	if count >= l.limit {
+func (l *limiter) Allow() bool {
+	if l.count() >= l.limit {
 		return false
 	}
 
