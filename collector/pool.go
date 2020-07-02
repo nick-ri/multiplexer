@@ -27,6 +27,7 @@ type collector struct {
 	fixed     int
 	overflow  int
 	spawned   int
+	closed    bool
 	client    *http.Client
 }
 
@@ -43,6 +44,8 @@ func NewCollector(fixed, overflow int, timeout time.Duration) Collector {
 }
 
 func (c *collector) Start(ctx context.Context) {
+	defer log.Println("workers pool was started")
+
 	for i := 1; i <= c.fixed; i++ {
 		go c.fixedWorker(i, c.workersCh)
 	}
@@ -50,9 +53,23 @@ func (c *collector) Start(ctx context.Context) {
 	go func() {
 		select {
 		case <-ctx.Done():
-			close(c.workersCh)
+			c.stop()
 		}
 	}()
+}
+
+func (c *collector) stop() {
+	defer log.Println("workers pool was stopped")
+	c.Lock()
+	c.closed = true
+	c.Unlock()
+	close(c.workersCh)
+}
+
+func (c *collector) isStopped() bool {
+	c.RLock()
+	defer c.RUnlock()
+	return c.closed
 }
 
 func (c *collector) getSpawnedCount() int {
@@ -69,6 +86,10 @@ func (c *collector) incSpawnedCount(n int) int {
 }
 
 func (c *collector) acquireWorkers(count, buffSize int) (chan param, error) {
+	if c.isStopped() {
+		return nil, errors.New("can't acquire workers from stopped pool")
+	}
+
 	if count > c.fixed+c.overflow {
 		return nil, errors.New("acquired workers more that pool size")
 	}
