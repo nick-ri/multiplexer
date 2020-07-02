@@ -52,9 +52,22 @@ The final formula to approx. count is: `count_in_prev_window * (window_size-wind
 - `window_offset`: calculated difference between the current window and sliding window(in which all checks happening).
 - `count_in_curr_window`: current window count number of requests.
 
+#### To check how it's works 
+
+Run multiplexer:
+```shell script
+$ go run ./cmd/multiplexer
+```
+
+Collect the data:
+
+```shell script
+$ curl -X POST -d '["https://google.com", "https://youtube.com", "https://facebook.com", "https://wikipedia.org", "https://www.amazon.com", "https://live.com", "https://zoom.us"]' http://localhost:8080/collect
+```
+
 #### Test rate limiting 
 
-Run special cli command `$ go run ./cmd/limiter/main.go -limit 30`.
+Run special cli command `$ go run ./cmd/limiter -limit 30`.
 After that run load testing [vegeta](https://github.com/tsenart/vegeta) tool: `$ echo "GET http://localhost:8080/limit" | vegeta attack -rate=50 -duration=15s | vegeta report`
 
 Check the results:
