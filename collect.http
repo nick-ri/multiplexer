@@ -1,0 +1,28 @@
+POST http://localhost:8080/collect
+Content-Type: application/json
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Safari/605.1.15
+
+[
+  "https://google.com",
+  "https://youtube.com",
+  "https://facebook.com",
+  "https://wikipedia.org",
+  "https://www.amazon.com",
+  "https://live.com",
+  "https://zoom.us",
+  "https://www.blogspot.com",
+  "https://office.com",
+  "https://www.microsoft.com",
+  "https://instagram.com",
+  "https://www.twitch.tv",
+  "https://bing.com",
+  "https://twitter.com",
+  "https://stackoverflow.com",
+  "https://www.ebay.com",
+  "https://www.naver.com",
+  "https://vk.com",
+  "https://ya.ru",
+  "https://www.livejasmin.com"
+]
+
+###

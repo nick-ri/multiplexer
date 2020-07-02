@@ -3,6 +3,7 @@ package collector
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -81,7 +82,9 @@ func (c *collector) acquireWorkers(count, buffSize int) (chan param, error) {
 		select {
 		case c.workersCh <- ch:
 		default:
-			go c.reader(c.incSpawnedCount(1)+c.fixed, ch, false)
+			id := c.incSpawnedCount(1) + c.fixed
+			log.Printf("spawn overflow worker id:%d", id)
+			go c.reader(id, ch, false)
 		}
 	}
 	return ch, nil
