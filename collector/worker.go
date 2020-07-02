@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"sync/atomic"
 )
 
 func (c *collector) fixedWorker(id int, paramsCh <-chan chan param) {
@@ -30,7 +29,7 @@ func (c *collector) reader(id int, ch <-chan param, fixed bool) {
 	defer log.Printf("reader id:%d, released", id)
 
 	if !fixed {
-		defer atomic.AddInt32(&c.spawned, -1)
+		defer c.incSpawnedCount(-1)
 	}
 
 	for prm := range ch {
