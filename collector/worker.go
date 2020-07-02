@@ -55,6 +55,7 @@ func (c *collector) reader(id int, ch <-chan param, fixed bool) {
 		}
 
 		bts, err := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
 		if err != nil {
 			prm.errCh <- fmt.Errorf("%s :%w", prm.url, err)
 			break
@@ -64,8 +65,6 @@ func (c *collector) reader(id int, ch <-chan param, fixed bool) {
 			Url:  prm.url,
 			Body: string(bts),
 		}
-
-		resp.Body.Close()
 	}
 }
 
